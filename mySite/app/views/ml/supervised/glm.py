@@ -8,7 +8,7 @@ import re
 class glm:
 
     def __init__(self):
-        st.markdown("### Start of Generalised Linear Models",unsafe_allow_html=True)
+        st.markdown("### Start of Data Cleaning",unsafe_allow_html=True)
         df = None
         file = st.file_uploader("Upload Files",['csv','xls'])
         flag= 1
@@ -39,36 +39,32 @@ class glm:
 
             """ Removing features with little variance or no variance"""
             num_cols,cat_cols = glm.cat_num_cols(df) 
-            st.write("data frame with only numerical features")
-            st.write(df[num_cols])  
-            st.write(df[num_cols].shape[0],df[num_cols].shape[1])
-            st.write("data frame with only categorical features")
-            st.write(df[cat_cols])  
-            st.write(df[cat_cols].shape[0],df[cat_cols].shape[1])
-
-            st.write("Enter the categorical features that can be converted to numerical features")    
-            text = st.text_input('Allowed delimiters are comma,space,semi-colon or Colon ')
+            if st.checkbox("data frame with only numerical features"):
+                st.write(df[num_cols].head(10))  
+                st.write(df[num_cols].shape[0],df[num_cols].shape[1])
+            
+            if st.checkbox("data frame with only categorical features"):
+                st.write(df[cat_cols].head(10))  
+                st.write(df[cat_cols].shape[0],df[cat_cols].shape[1])
+            
+            sel = VarianceThreshold(threshold=0.05)
 
             def clean(x):
                 x = re.sub("[a-zA-Z +%~!@#$%^&*<>()-+=]","",str(x))
                 if x == '':
                     x=0
                 return float(x)
-            
-            if (text in ["None"," ","", "none"]):
-                st.warning('No Fields to ceonvert into')
-            else:
-                text = re.split('[;: ,]',text)
+
+            if st.checkbox("Want to Change some categorical features to numerical?"):
+                features = st.multiselect("Enter the categorical features that can be converted to numerical features",cat_cols)    
                 final = []
-                for col in text:
-                    if col not in df.columns:
-                        st.error('\'{}\' is not a feature of problem dataset'.format(col))
-                    else:
+                if features:
+                    for col in features:
                         df[col]=df[col].apply(clean)
                         final.append(col)
-                st.write(df[final])
-
-        return df, flag
+                st.write(df.head(10))
+         
+        return df, 0
 
     def file_selector(file,flag):
         if flag:
@@ -81,9 +77,8 @@ class glm:
                 df = pd.DataFrame(pd.read_excel(file))
             
             if  file !=None:
-                row = st.text_input("Enter No of Rows to Display. Default is 5 rows")
-                rows = 5 if row =='' else int(row)
-                st.dataframe(df.head(rows))
+                row = st.number_input("Select the number of rows to display",min_value=1,max_value=df.shape[0])
+                st.dataframe(df.head(row))
             else:
                 df =None
                 flag = 0
